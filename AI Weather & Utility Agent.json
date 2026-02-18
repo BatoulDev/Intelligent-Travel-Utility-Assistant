@@ -1,0 +1,216 @@
+{
+  "name": "AI Weather & Utility Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -400,
+        -128
+      ],
+      "id": "66f2d7c2-4aff-47fa-b962-a6c81fa4abcd",
+      "name": "When chat message received",
+      "webhookId": "094252d3-7dc3-4585-a2fe-0686156d9642"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful Travel Planning Assistant. Your job is to help users plan trips by:\n\n1. Providing weather information for destinations\n\n2. Converting currencies for budget planning\n\n3. Calculating travel costs and budgets\n\n4. Giving practical travel advice\n\nAvailable Tools:\n\n- Weather API: Get current weather for any city\n\n- Currency Exchange API: Convert between currencies\n\n- Calculator: Perform mathematical calculations\n\nGuidelines:\n\n- Always be friendly and helpful\n\n- Use weather data to give practical advice (pack umbrella if rain, etc.)\n\n- When discussing costs, always offer to convert currencies\n\n- Show your calculations when doing budget math\n\n- If user asks about a city, proactively check weather\n\nExample interactions:\n\n- User: \"What's the weather in Paris?\"\n\n  → Use Weather tool, then give advice based on conditions\n\n- User: \"I have $1000 USD, how much is that in EUR?\"\n\n  → Use Currency tool, then explain the value\n\n- User: \"I want to visit Dubai for 5 days, budget is $2000. Daily expenses are $150\"\n\n  → Use Calculator to check if budget works (5 * 150 = 750), then advise"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -80,
+        -128
+      ],
+      "id": "7d63895e-61c8-418b-9e31-3eba14b90960",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        128
+      ],
+      "id": "29f9e2ca-61be-4575-83e6-84ec48f49d70",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "FOyt8lmzygjunRfj",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -144,
+        128
+      ],
+      "id": "e4fad271-e8fe-4710-a247-17bfce7be622",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "url": "=https://wttr.in/{{ $fromAI('city') }}?format=j1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        128
+      ],
+      "id": "ce4237ab-f677-454f-9f06-9cb492ebddba",
+      "name": "get_weather"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.exchangerate-api.com/v4/latest/{{ $fromAI('from_currency') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        128
+      ],
+      "id": "4a585389-5007-4e15-af86-dbb8ac7a514e",
+      "name": "convert_currency"
+    },
+    {
+      "parameters": {
+        "url": "=https://restcountries.com/v3.1/name/{{ $fromAI('country') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        336,
+        128
+      ],
+      "id": "ea028c01-0758-4ae9-b5e6-9a2d1d2bc1f3",
+      "name": "get_country_info"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        480,
+        128
+      ],
+      "id": "33e2f0f9-16f8-4bb3-87a5-c58809d942f1",
+      "name": "Calculator"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert_currency": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_country_info": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7f131567-9a9a-4388-9811-631a647c10a3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "788588a845777cd319fa9655e4e1b96573b8e9b75b00d24b99a8c8193600abe5"
+  },
+  "id": "kWol2Z7fnlYIAvX310Htq",
+  "tags": []
+}
